@@ -1,0 +1,403 @@
+{
+  "name": "n8n-bot-project",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "eacff4af-4731-40f4-8d5c-1732771606f5",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -280,
+        -320
+      ],
+      "webhookId": "1727c687-aed0-49cf-96af-e7796819fbb3",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "236047ff-75a2-47fd-b338-1e9763c4015e",
+              "name": "chunks",
+              "type": "number",
+              "value": 5
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "0532aa97-604e-4c32-847c-65493d7a9250",
+      "name": "Set max chunks to send to model",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        -440
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[INST] <<SYS>>\nYou are a research assistant. Follow these rules STRICTLY:\n1. First check if the Context contains \"Content is likely not related\". If true:\n   - Respond ONLY with: \"I cannot answer your question because the available content does not appear relevant to your query.\"\n   - DO NOT list sources or show reasoning steps\n   - DO NOT continue with other rules\n2. If content is relevant:\n   - Think aloud before answering\n   - Number each reasoning step\n   - Cite ONLY as [Source: filename.pdf] \n   - List each filename ONLY ONCE\n   - Format as:\n\nTHINKING:\n1. [Step 1]...\n2. [Step 2]...\n\nFINAL ANSWER:\n[Response]\n[Source: filename1.pdf]...]\n<</SYS>>\n\nContext: \"\"\"\n{{ $json.merged_pageContent }}\n\"\"\"\n\nRelevant Files:\n{{\n  [...new Set($json.metadata.map(m => m.filename))].join(', ')\n}}\n\nQuestion: {{ $json.chatInput }}\n\n[/INST]",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "I'm currently analyzing the files you uploaded and working on finding the answers for you. This might take a little time, so feel free to grab a cup of coffee and come back later!"
+            }
+          ]
+        }
+      },
+      "id": "ef471295-e923-4695-b056-7e5c93ab0265",
+      "name": "Answer the query based on chunks",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1480,
+        -440
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "# Try me out\nI am content-based QA bot, using Deepseek R1 and chat as LLM model\n",
+        "height": 350.7942096493649
+      },
+      "id": "8349a546-1697-4a76-831a-844f0b66d186",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        -160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Chat with file, getting reponses",
+        "height": 989,
+        "width": 2354,
+        "color": 7
+      },
+      "id": "89163f3a-561e-4a34-b354-72c8c09661dd",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -440,
+        -600
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "sentence-transformers/all-MiniLM-L6-v2",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        700,
+        -260
+      ],
+      "id": "eeadbcce-68af-4fa7-a983-172281e7cc0d",
+      "name": "Embeddings HuggingFace Inference",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "5bsLNXnmPzwcWhWA",
+          "name": "HuggingFaceApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "chatbot_chunks",
+          "mode": "list",
+          "cachedResultName": "chatbot_chunks"
+        },
+        "prompt": "={{ $json.chatInput }}",
+        "topK": "={{ $json.chunks }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        700,
+        -440
+      ],
+      "id": "7cf01688-4c7a-4c6c-8fc8-64261fe6fb11",
+      "name": "Get top chunks matching",
+      "alwaysOutputData": false,
+      "credentials": {
+        "qdrantApi": {
+          "id": "9Wtw17nPABD8l78R",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4313c3cb-04b0-46b4-bf9e-68add97cc83e",
+              "leftValue": "={{ $json.requires_document_processing }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        -320
+      ],
+      "id": "f2a1b4e5-1df1-4913-bd1e-261c60f18a60",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SMALL_TALK_TRIGGERS = [\"hi\", \"hello\", \"hey\", \"thanks\", \"bye\", \"how are you\"];\n\n// Extract user input and trim whitespace or line breaks\nconst message = ($input.all()[0]?.json?.chatInput || \"\").toLowerCase().trim();\n\n// Define a minimum threshold for message length to avoid false positives\nconst isVeryShort = message.length < 15;\n\n// Check whether message contains small talk keywords (using word boundaries for accuracy)\nconst isSmallTalkKeyword = SMALL_TALK_TRIGGERS.some(trigger => \n  new RegExp(`\\\\b${trigger}\\\\b`, 'i').test(message)\n);\n\n// Final judgment: only classify as small talk if it's both short and matches a trigger\nconst isSmallTalk = isVeryShort && isSmallTalkKeyword;\n\n// Return updated input with processing flag\nreturn [{\n  json: {\n    ...$input.all()[0].json,\n    requires_document_processing: !isSmallTalk\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -320
+      ],
+      "id": "1f5b3e32-1b1e-4393-a1f9-86ab54bef011",
+      "name": "Intent Check"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-reasoner",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        -240
+      ],
+      "id": "1afa48d7-222e-4171-bb5e-b2e9aaf33147",
+      "name": "Reasoner",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "9jBPu6kGLrmztzCn",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        340,
+        60
+      ],
+      "id": "2fee407a-ea9c-462a-b217-4c7c4a674b95",
+      "name": "Chat",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "9jBPu6kGLrmztzCn",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[INST] <<SYS>>\nYou are a small talk agent. Follow these rules STRICTLY:\n1. Respond to casual chat in 1-2 friendly sentences, limited to first 3 rounds only. \n2. If unsure or over 3 rounds, say \"I'm an content QA assistant. Ask me about document you uploaded!\"\n<</SYS>>\n\n{{ $json.chatInput }}\n[/INST]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        420,
+        -100
+      ],
+      "id": "b30fb226-bcc4-4091-918c-78c07134b4ae",
+      "name": "Small Talk"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge chunks with filename tags\nconst markedChunks = $input.all().map(item => {\n  const meta = item.json.document.metadata;\n  return `### Source: ${meta.filename} (Chunk ${meta.chunk_id})\\n${item.json.document.pageContent}`;\n});\n\nreturn [{\n  json: {\n    merged_pageContent: markedChunks.join(\"\\n\\n---\\n\\n\"),\n    chatInput: $item(0).$node[\"Set max chunks to send to model\"].json[\"chatInput\"],\n    metadata: $input.all().map(item => item.json.document.metadata) \n// Keep the original metadata\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -440
+      ],
+      "id": "15f485f9-52e0-41dc-a09f-8921533b7978",
+      "name": "Merge content"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Forced return of 3 chunks (if the input is sufficient), 100% adapted to your Qdrant data structure\n\n// 1. Get the most original input data\nconst rawInputData = $input.all();\n\n// 2. Debug log 1: record the original input structure\nconsole.log(\"=== DEBUG 1/3 - RAW INPUT ===\", \n  JSON.stringify({\n    inputType: typeof rawInputData,\n    isArray: Array.isArray(rawInputData),\n    length: rawInputData.length,\n    firstItemKeys: rawInputData[0] ? Object.keys(rawInputData[0]) : null\n  }, null, 2));\n\n\n// 3. Data extraction (compatible with all known situations)\nlet chunks = [];\nfor (const item of rawInputData) {\n  if (item.json) {\n    if (Array.isArray(item.json)) {\n      chunks.push(...item.json);\n    } else {\n      chunks.push(item.json);\n    }\n  } else if (Array.isArray(item)) {\n    chunks.push(...item);\n  } else if (item.document) {\n    chunks.push(item);\n  }\n}\n\n// 4. Debug log 2: processed data\nconsole.log(\"=== DEBUG 2/3 - PROCESSED CHUNKS ===\", \n  JSON.stringify({\n    chunkCount: chunks.length,\n    sampleChunk: chunks[0] || null\n  }, null, 2));\n\n\n// 5. Data validation (ensure the structure is correct)\nlet validChunks = chunks.filter(chunk => {\n  try {\n    return (\n      chunk &&\n      typeof chunk.score === 'number' &&\n      chunk.document &&\n      chunk.document.pageContent &&\n      chunk.document.metadata &&\n      chunk.document.metadata.cluster_label !== undefined\n    );\n  } catch {\n    return false;\n  }\n});\n\n// 6. Forced return mechanism\nlet finalResult = [];\n\n// Step 1: Filter out low-score chunks (< 0.5)\nvalidChunks = validChunks.filter(chunk => chunk.score >= 0.5);\n\n// Step 2: Fallback if no valid chunks left\nif (validChunks.length === 0) {\n  return [{\n    document: {\n      pageContent: \"Content is likely not related.\",\n      metadata: {}\n    },\n    score: 0\n  }];\n}\n\n// Step 3: Prioritize cluster_label + diverse filename on close scores\nvalidChunks.sort((a, b) => {\n  const scoreDiff = b.score - a.score;\n\n  // If score is very close (< 0.01), compare by filename to promote diversity\n  if (Math.abs(scoreDiff) < 0.01) {\n    const fileA = a.document.metadata.filename || '';\n    const fileB = b.document.metadata.filename || '';\n    if (fileA !== fileB) {\n      return fileA.localeCompare(fileB);\n    }\n  }\n\n  // Otherwise, prioritize by cluster_label similarity\n  const clusterA = a.document.metadata.cluster_label;\n  const clusterB = b.document.metadata.cluster_label;\n  if (clusterA !== clusterB) {\n    return clusterA < clusterB ? -1 : 1;\n  }\n\n  // Default: sort by score descending\n  return scoreDiff;\n});\n\n// Step 4: Take up to 3\nfinalResult = validChunks.slice(0, 3);\n\n// Step 5: If less than 3, pad by duplicating last item\nwhile (finalResult.length < 3 && finalResult.length > 0) {\n  const last = finalResult[finalResult.length - 1];\n  const cloned = JSON.parse(JSON.stringify(last));\n  cloned.document.metadata.chunk_id = `${cloned.document.metadata.chunk_id}-pad${finalResult.length}`;\n  finalResult.push(cloned);\n}\n\n// 7. Debug log 3: final output\nconsole.log(\"=== DEBUG 3/3 - FINAL OUTPUT ===\", \n  JSON.stringify({\n    outputCount: finalResult.length,\n    outputSample: finalResult[0] || null\n  }, null, 2));\n\n// 8. Return finalResult\nreturn finalResult;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        -440
+      ],
+      "id": "a482e57b-bd07-404d-92cf-6b82a2d4496b",
+      "name": "Dynamic cluster prioritization"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Intent Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set max chunks to send to model": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks": {
+      "main": [
+        []
+      ]
+    },
+    "Embeddings HuggingFace Inference": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching": {
+      "main": [
+        [
+          {
+            "node": "Dynamic cluster prioritization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Check": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Set max chunks to send to model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Small Talk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reasoner": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Small Talk",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge content": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dynamic cluster prioritization": {
+      "main": [
+        [
+          {
+            "node": "Merge content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2d483efb-5488-408f-a18d-5cc7cb1548ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "94af27c6adfaff701375e5f9948f8e8e09c39fec6d5b34070307951398a87542"
+  },
+  "id": "IveTEszxOTHNiWUD",
+  "tags": []
+}
