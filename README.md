@@ -31,15 +31,15 @@ Ultimately, this is a **flexible, scalable, and user-centered** system designed 
 ### 1. Prerequisites
 Before running the n8n chatbot:
 
-1. Qdrant Vector Store account and API key
-2. LLM API key
+- Qdrant Vector Store account and API key
+- LLM API key
 
 ### 2. Build the Docker image
 'Preprocess_Evaluation.ipynb' is a notebook that performs the following workflow:
-1. Loads user-selected PDF files
-2. Preprocesses extracted text
-3. Performs embedding, clustering, and classification
-4. Conducts evaluation and error analysis
+a. Loads user-selected PDF files
+b. Preprocesses extracted text
+c. Performs embedding, clustering, and classification
+d. Conducts evaluation and error analysis
 
 'n8n_bot_project.json' is an n8n workflow file. You can run it using:
 - The n8n.io platform (requires paid subscription)
