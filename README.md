@@ -36,10 +36,10 @@ Before running the n8n chatbot:
 
 ### 2. Build the Docker image
 'Preprocess_Evaluation.ipynb' is a notebook that performs the following workflow:
-a. Loads user-selected PDF files
-b. Preprocesses extracted text
-c. Performs embedding, clustering, and classification
-d. Conducts evaluation and error analysis
+a\. Loads user-selected PDF files
+b\. Preprocesses extracted text
+c\. Performs embedding, clustering, and classification
+d\. Conducts evaluation and error analysis
 
 'n8n_bot_project.json' is an n8n workflow file. You can run it using:
 - The n8n.io platform (requires paid subscription)
