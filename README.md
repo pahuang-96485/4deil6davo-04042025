@@ -1,4 +1,4 @@
-# n8n content-based Chatbot
+# Project: n8n Content-based Chatbot
 
 A content-aware conversational agent built with **n8n** that can parse user-uploaded PDFs and generate **context-based answers** directly from the document content — no preconfigured training corpus required.
 
